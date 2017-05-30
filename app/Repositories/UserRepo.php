@@ -96,9 +96,7 @@ class UserRepo
 		$data['interest'] = (!empty($data['interest']))?implode(',', $data['interest']):'';
 		$data['skill'] = (!empty($data['skill']))?implode(',', $data['skill']):'';
 		$data['is_profile_updated'] = DB::raw('"1"');
-		if(!empty($data['password'])){
-			$data['password']  = bcrypt($data['password']);
-		}
+		if(!empty($data['password'])){ $data['password']  = bcrypt($data['password']); }else{ unset($data['password']); }
 		
 		return User::find($id)->update($data);
 	}
