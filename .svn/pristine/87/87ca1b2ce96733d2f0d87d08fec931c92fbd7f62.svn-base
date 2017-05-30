@@ -17,8 +17,8 @@ class CreateSettingTble extends Migration
         Schema::create('settings', function (Blueprint $table) {
             $table->increments('id');
             $table->string('login_with');
-            $table->text('interest')->nullable();
-            $table->text('skill')->nullable();
+            $table->string('interest');
+            $table->string('skill');
             $table->timestamps();
         });
     }
