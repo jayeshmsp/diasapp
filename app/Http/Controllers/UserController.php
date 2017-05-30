@@ -2,25 +2,29 @@
 
 use Illuminate\Http\Request;
 use App\Repositories\UserRepo;
+use App\Repositories\SettingRepo;
 use App\Repositories\RoleRepo;
 use Illuminate\Support\Facades\Validator;
 use View;
+use Auth;
 
 class UserController extends Controller
 {
 	private $view_path;
     protected $UserRepo;
     protected $RoleRepo;
+    protected $SettingRepo;
 
-    public function __construct(UserRepo $UserRepo,RoleRepo $RoleRepo)
+    public function __construct(Request $request,UserRepo $UserRepo,RoleRepo $RoleRepo,SettingRepo $SettingRepo)
     {
     	$this->middleware('auth');
         $this->UserRepo = $UserRepo;
         $this->RoleRepo = $RoleRepo;
+        $this->SettingRepo = $SettingRepo;
 
         $this->view_path = 'users.user';
-        View::share('title', 'Users');
-        View::share('module_name', 'Users');
+        View::share('title', (($request->has('q'))?'Edit Profile':'Users'));
+        View::share('module_name', (($request->has('q'))?'Edit Profile':'Users'));
     }
 
     // Method : index
@@ -58,7 +62,7 @@ class UserController extends Controller
         $data   = array_except($inputs, 'save', 'save_exit','password_confirmation');
 
         $rules = [
-            'name' => 'required|alpha|string|max:255',
+            'name' => 'required|alpha_space|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:6|confirmed',
             'role_id' => 'required'
@@ -101,7 +105,7 @@ class UserController extends Controller
         $data   = array_except($inputs,array('save','save_exit'));
 
          $rules = [
-            'name' => 'required|string|alpha|max:255',
+            'name' => 'required|string|alpha_space|max:255',
             'password' => 'required|string|min:6|confirmed',
             'role_id' => 'required'
         ];
@@ -131,5 +135,54 @@ class UserController extends Controller
     public function destroy(Request $request,$id)
     {
     	return redirect('user')->with('error', 'You can not delete any user');
+    }
+
+    public function profile()
+    {
+        $item = $this->UserRepo->find(Auth::user()->id);
+        $interest = $this->SettingRepo->lists('interest');
+        $skill = $this->SettingRepo->lists('skill');
+        
+        View::share('title','Profile');
+        
+        $compact = compact('item','interest','skill');
+        return view($this->view_path . '.profile',$compact);        
+    }
+
+    public function postProfile(Request $request)
+    {
+        $inputs = $request->except('_token','_method');
+        $data   = array_except($inputs,array('save','save_exit','password_confirmation'));
+        $id = Auth::user()->id;
+
+         $rules = [
+            'name' => 'required|string|alpha_space|max:255',
+            'password' => 'sometimes|required|string|min:6|confirmed',
+            'mobile_contact_num' => 'required_without_all:work_contact_num,home_contact_num|max:10',
+            'work_contact_num' => 'required_without_all:mobile_contact_num,home_contact_num|max:10',
+            'home_contact_num' => 'required_without_all:mobile_contact_num,work_contact_num|max:10',
+            'email' => "required|email|max:255|unique:users,email,".$id,
+            'address' => "max:255"
+        ];
+        if(!$request->input('password')){
+            unset($rules['password']);
+        }
+        
+        // Create a new validator instance from our validation rules
+        $validator = Validator::make($inputs, $rules);
+
+        // If validation fails, we'll exit the operation now.
+        if ($validator->fails()) {
+            return redirect('user/profile')
+                ->withErrors($validator)
+                ->withInput();
+        }
+
+        if($this->UserRepo->updateProfile($data,$id)){
+            return redirect('user/profile')
+            ->with('success', 'Profile updated sucessfully');
+        }
+
+        return redirect('user/profile')->with('error', 'Can not be updated');
     }
 }

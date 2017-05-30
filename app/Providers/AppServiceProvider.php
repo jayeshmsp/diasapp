@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\Validator;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -13,6 +14,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+        //Add this custom validation rule.
+        Validator::extend('alpha_space', function ($attribute, $value) {
+            return preg_match('/^[\pL\s]+$/u', $value); 
+        });
+
         \Schema::defaultStringLength(191);
         //
     }

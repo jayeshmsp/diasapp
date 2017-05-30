@@ -11,6 +11,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Foundation\Auth\RegistersUsers;
 use Form;
+use View;
+use App\Setting;
 
 class RegisterController extends Controller
 {
@@ -42,6 +44,9 @@ class RegisterController extends Controller
     public function __construct()
     {
         $this->middleware('guest');
+
+        $setting = Setting::first();
+        View::share('login_with',(isset($setting->login_with) && !empty($setting->login_with))?$setting->login_with:'email' );
     }
 
     /**
@@ -52,12 +57,17 @@ class RegisterController extends Controller
      */
     protected function validator(array $data)
     {
-        return Validator::make($data, [
-            'name' => 'required|string|alpha|max:255',
+        $rules = [
+            'name' => 'required|string|alpha_space|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:6|confirmed',
             'g-recaptcha-response' => 'required|captcha',
-        ]);
+        ];
+        if (isset($data['username']) && !empty($data['username']) ) {
+            $rules['username'] = 'required|string|max:255|unique:users';
+            unset($rules['email']);
+        }
+        return Validator::make($data, $rules);
     }
 
     /**
@@ -70,7 +80,8 @@ class RegisterController extends Controller
     {
         $user =  User::create([
             'name' => $data['name'],
-            'email' => $data['email'],
+            'email' => isset($data['email'])?$data['email']:'',
+            'username' => isset($data['username'])?$data['username']:'',
             'password' => bcrypt($data['password']),
             'email_token' => str_random(10),
         ]);
@@ -97,12 +108,17 @@ class RegisterController extends Controller
         try
         {
             $user = $this->create($request->all());
-            // After creating the user send an email with the random token generated in the create method above
-            $email = new EmailVerification(new User(['email_token' => $user->email_token, 'name' => $user->name]));
-            Mail::to($user->email)->send($email);
+            
+            $msg = 'Register Successfully Please login.';
+            if (isset($user->email) && !empty($user->email) ) {
+                $email = new EmailVerification(new User(['email_token' => $user->email_token, 'name' => $user->name]));
+                Mail::to($user->email)->send($email);
+                
+                $msg = 'Register Successfully Please check your mail for varification.';
+            }
+            
             DB::commit();
-            //return back('login')->with('sucess','Register Successfully Please check your mail for varification.');
-            return back()->with('success','Register Successfully Please check your mail for varification.');
+            return back()->with('success',$msg);
         }
         catch(Exception $e)
         {

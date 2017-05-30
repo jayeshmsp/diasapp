@@ -90,4 +90,16 @@ class UserRepo
 		}
 		return $o;
 	}
+
+	public function updateProfile(array $data,$id)
+	{
+		$data['interest'] = (!empty($data['interest']))?implode(',', $data['interest']):'';
+		$data['skill'] = (!empty($data['skill']))?implode(',', $data['skill']):'';
+		$data['is_profile_updated'] = DB::raw('"1"');
+		if(!empty($data['password'])){
+			$data['password']  = bcrypt($data['password']);
+		}
+		
+		return User::find($id)->update($data);
+	}
 }

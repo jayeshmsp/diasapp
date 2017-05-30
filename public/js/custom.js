@@ -25,3 +25,7 @@ $(document).on("click",'.delete-confirm',function() {
     });
     return false;        
 });
+
+$('.bootstrap-tagsinput').tagsinput({
+   confirmKeys: [188, 32, 39],
+});

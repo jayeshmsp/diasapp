@@ -1,7 +1,8 @@
 <div class='box-body'>
+    
     <!-- Name -->
     <div class='row'>
-    <div class="User-title"><h1 class="user-title-inner ">User</h1></div>
+    <div class="User-title"><h1 class="user-title-inner ">{{$title}}</h1></div>
         <div class='col-sm-6'>
             <div class="{{ $errors->has('name') ? 'has-error' : '' }}">
                 <label class="control-label col-lg-3" for="name">Name</label>
@@ -52,7 +53,7 @@
             <div class="{{ $errors->has('role_id') ? 'has-error' : '' }}">
                 <label class="control-label col-lg-3" for="role_id">Select Roles</label>
                 <div class="col-lg-8 input-box">
-                    {!! Form::select('role_id[]',$roles,null,array('multiple'=>'multiple','class'=>'form-control')) !!}
+                    {!! Form::select('role_id[]',$roles,old('role_id'),array('multiple'=>'multiple','class'=>'form-control')) !!}
                     {!! $errors->first('role_id[]', '<span class="help-block">:message</span>') !!}
                 </div>
             </div>

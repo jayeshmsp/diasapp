@@ -121,12 +121,52 @@ class LoginController extends Controller
 
         return $user;
     }
+
+    /**
+    * Get the needed authorization credentials from the request.
+    *
+    * @param  \Illuminate\Http\Request  $request
+    * @return array
+    */
     public function credentials(Request $request)
     {
+        $field = filter_var($request->input('email'), FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
+        $varified = filter_var($request->input('email'), FILTER_VALIDATE_EMAIL) ? 1 : 0;
         return [
-            'email' => $request->email,
+            $field => $request->email,
             'password' => $request->password,
-            'verified' => 1,
+            'verified' => $varified,
         ];
+
+    }
+
+    /**
+     * Validate the user login request.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return void
+     */
+    protected function validateLogin(Request $request)
+    {
+        $this->validate($request, [
+            $this->username() => 'required', 
+            'password' => 'required',
+            'g-recaptcha-response' => 'required|captcha',
+        ]);
+    }
+
+    /**
+     * After login redirect
+     *
+     * @param  \Illuminate\Http\Request  $request,user
+     * @return void
+     */
+    protected function authenticated(Request $request, $user)
+    {
+        if (empty($user->is_profile_updated)) {
+            return redirect('user/profile');
+        }
+
+         return redirect('/home');
     }
 }

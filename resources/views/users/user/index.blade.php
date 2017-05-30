@@ -32,6 +32,7 @@
                                 <th>#</th>
                                 <th>Name</th>
                                 <th>Email</th>
+                                <th>Last Login</th>
                                 <th>Login Type</th>
                                 <th width="120">Action</th>
                             </tr>
@@ -42,6 +43,7 @@
                                 <td>{{$srno++ }}</td>
                                 <th>{{$value->name}}</th>
                                 <td>{{$value->email}}</td>
+                                <td>{{$value->last_login}}</td>
                                 <td>{{$value->provider}}</td>
                                 <td>
                                 @permission('user-edit')

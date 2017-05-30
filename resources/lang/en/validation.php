@@ -118,4 +118,6 @@ return [
 
     'attributes' => [],
 
+    'alpha_space' =>'The :attribute may only contain letters and spaces.',
+    'captcha' => 'The :attribute field is required.'
 ];
